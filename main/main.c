@@ -123,6 +123,7 @@ static int Get_number(char *data);
 static void Led_RGB_Limits_Temp (int temp_li_green ,int temp_li_blue, int temp_li_red, int temp_ls_green ,int temp_ls_blue, int temp_ls_red);
 static void print_Limits(void);
 static void print_Threshold(void);
+static void print_Temperature(void);
 
 //Prototipado de funciones del ADC
 int encontrar_posicion_mas_cercana(float* vector, int longitud, float variable);
@@ -319,6 +320,10 @@ void app_main(void)
                     print_Threshold();
                 }
 
+                if(strstr(data,"GET_TEMP") != 0){
+                    print_Temperature();
+                }
+
                 uart_flush(UART_NUM); //Asegura que todo el DATA está transmitido antes de que pase a la siguiente línea
                 break;
             default:
@@ -396,6 +401,11 @@ static void print_Limits(void){
 /****************************************Función para IMPRIMIR el THRESHOLD***************/
 static void print_Threshold(void){
     len = sprintf((char *)&message_to_send[0], "El THRESHOLD es: %.2f \r\n",threshold_temp);
+    uart_write_bytes(UART_NUM, (const char*) message_to_send, len);
+}
+
+static void print_Temperature(void){
+    len = sprintf((char *)&message_to_send[0], "La temperatura es: %.2f \r\n",temp);
     uart_write_bytes(UART_NUM, (const char*) message_to_send, len);
 }
 
