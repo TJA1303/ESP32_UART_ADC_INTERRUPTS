@@ -24,7 +24,8 @@
         "utility": "c",
         "cstring": "c",
         "freertos.h": "c",
-        "string": "c"
+        "string": "c",
+        "vector": "c"
     },
     "idf.flashType": "UART"
 }

@@ -75,7 +75,7 @@ uint32_t li_green;
 uint32_t ls_blue;
 uint32_t li_blue;
 
-float threshold_temp = 3.3455;
+float threshold_temp = 70.5;
 
 //Variables del TIMER
 TimerHandle_t xTimers;
@@ -92,7 +92,15 @@ int threshold_freq = 1;
 
 //Variables del ADC
 int raw = 0;
+int res_2 = 1000;
 float temp = 1.0;
+float v_res = 0.0;
+float res_ntc = 0.0;
+int temp_index = 0;
+
+float valores_res_ntc[] = {1560 , 1390, 1240, 1110,1000, 899, 810, 731, 661, 599, 543, 493, 449, 409, 373, 341, 312, 286, 262};
+float valores_temp_ntc[] = {15,17.5,20,22.5,25,27.5,30,32.5,35,37.5,40,42.5,45,47.5,50,52.5,55,57.5,60};
+
 
 
 
@@ -111,6 +119,9 @@ static int Get_number(char *data);
 static void Led_RGB_Limits_Temp (int temp_li_green ,int temp_li_blue, int temp_li_red, int temp_ls_green ,int temp_ls_blue, int temp_ls_red);
 static void print_Limits(void);
 static void print_Threshold(void);
+
+//Prototipado de funciones del ADC
+int encontrar_posicion_mas_cercana(float* vector, int longitud, float variable);
 
 
 //Prototipado de funciones de INTERRUPCIONES
@@ -151,7 +162,7 @@ esp_err_t init_timer(void)
 // Función de inicialización del ADC
 esp_err_t init_ADC(void){
     adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_11); //GPIO Vp
-    adc1_config_width(ADC_WIDTH_BIT_12);
+    adc1_config_width(ADC_WIDTH_BIT_12); //4096
     return ESP_OK;
 }
 
@@ -230,6 +241,18 @@ void app_main(void)
     {
         /***********************************************PROGRAMACIÓN OBTENER TEMPERATURA DE LA NTC (ADC)******************************************************/
         raw = adc1_get_raw(ADC1_CHANNEL_0);
+        v_res = (raw * 3.3) / 4096;
+        res_ntc = (3.3 / v_res - 1)* res_2;
+
+        temp_index = encontrar_posicion_mas_cercana(valores_res_ntc, sizeof(valores_res_ntc) / sizeof(valores_res_ntc[0]), res_ntc);
+        temp = valores_temp_ntc[temp_index];
+
+        //printf ("El raw es: %d\r\n",raw);
+        //printf ("El voltaje medido es: %f\r\n",v_res);
+        //printf ("La resistencia es: %f\r\n",res_ntc);
+        //printf ("La posicion mas cerca es: %d\r\n",temp_index);
+        //printf ("La temperatura es: %f\r\n",temp);
+
 
         /***********************************************PROGRAMACIÓN FRECUENCIA DEL BLINK (BOTONES)**********************************************************/
         if (banderaSUM == 1 ){
@@ -288,7 +311,7 @@ void app_main(void)
                     print_Limits();                  
 		        }
 
-                if(strstr(data,"GET_THRESHOLD") != 0){
+                if(strstr(data,"GET_THRESH") != 0){
                     print_Threshold();
                 }
 
@@ -343,15 +366,15 @@ static void Led_RGB_Limits_Temp (int temp_li_green ,int temp_li_blue, int temp_l
 	LEDG_OFF;
 	LEDB_OFF;
 
-	if ((10>temp_li_green) && (19 <= temp_ls_green)){
+	if ((temp>temp_li_green) && (temp <= temp_ls_green)){
 		LEDG_ON;
 	}
 
-	if ((21>temp_li_blue) && (29 <= temp_ls_blue)){
+	if ((temp>temp_li_blue) && (temp <= temp_ls_blue)){
 		LEDB_ON;
 	}
 
-	if ((31>temp_li_red) && (39 <= temp_ls_red)){
+	if ((temp>temp_li_red) && (temp <= temp_ls_red)){
 		LEDR_ON;
 	}
 }
@@ -373,6 +396,21 @@ static void print_Threshold(void){
 }
 
 
+//***********************************************************************FUNCIONES DEL ADC**********************************************************/
+int encontrar_posicion_mas_cercana(float* vector, int longitud, float variable) {
+    int indice = 0;
+    float distancia_minima = abs(vector[0] - variable);
+    
+    for (int i = 1; i < longitud; i++) {
+        float distancia_actual = abs(vector[i] - variable);
+        if (distancia_actual < distancia_minima) {
+            indice = i;
+            distancia_minima = distancia_actual;
+        }
+    }
+    
+    return indice;
+}
 
 
 
@@ -404,7 +442,7 @@ void vTimerCallback(TimerHandle_t pxTimer)
                 if (count_blink % 2 == 0){
                     LED_BLINK_OFF;
                 }
-                lse{
+                else{
                     LED_BLINK_ON;
                 }
             break;
@@ -425,7 +463,7 @@ void vTimerCallback(TimerHandle_t pxTimer)
                 if (count_blink % 2 == 0){
                     LED_BLINK_OFF;
                 }
-                lse{
+                else{
                     LED_BLINK_ON;
                 }
             break;
@@ -446,7 +484,7 @@ void vTimerCallback(TimerHandle_t pxTimer)
                 if (count_blink % 2 == 0){
                     LED_BLINK_OFF;
                 }
-                lse{
+                else{
                     LED_BLINK_ON;
                 }
             break;
@@ -467,7 +505,7 @@ void vTimerCallback(TimerHandle_t pxTimer)
                 if (count_blink % 2 == 0){
                     LED_BLINK_OFF;
                 }
-                lse{
+                else{
                     LED_BLINK_ON;
                 }
             break;
@@ -488,7 +526,7 @@ void vTimerCallback(TimerHandle_t pxTimer)
                 if (count_blink % 2 == 0){
                     LED_BLINK_OFF;
                 }
-                lse{
+                else{
                     LED_BLINK_ON;
                 }
             break;
@@ -509,7 +547,7 @@ void vTimerCallback(TimerHandle_t pxTimer)
                 if (count_blink % 2 == 0){
                     LED_BLINK_OFF;
                 }
-                lse{
+                else{
                     LED_BLINK_ON;
                 }
             break;
@@ -530,7 +568,7 @@ void vTimerCallback(TimerHandle_t pxTimer)
                 if (count_blink % 2 == 0){
                     LED_BLINK_OFF;
                 }
-                lse{
+                else{
                     LED_BLINK_ON;
                 }
             break;
@@ -551,7 +589,7 @@ void vTimerCallback(TimerHandle_t pxTimer)
                 if (count_blink % 2 == 0){
                     LED_BLINK_OFF;
                 }
-                lse{
+                else{
                     LED_BLINK_ON;
                 }
             break;
@@ -572,7 +610,7 @@ void vTimerCallback(TimerHandle_t pxTimer)
                 if (count_blink % 2 == 0){
                     LED_BLINK_OFF;
                 }
-                lse{
+                else{
                     LED_BLINK_ON;
                 }
             break;
@@ -593,7 +631,7 @@ void vTimerCallback(TimerHandle_t pxTimer)
                 if (count_blink % 2 == 0){
                     LED_BLINK_OFF;
                 }
-                lse{
+                else{
                     LED_BLINK_ON;
                 }
             break;
@@ -602,6 +640,9 @@ void vTimerCallback(TimerHandle_t pxTimer)
             default:
             break;
         }
+    }
+    else{
+        LED_BLINK_OFF;        
     }
 }
 
