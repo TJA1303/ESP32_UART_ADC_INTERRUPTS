@@ -33,6 +33,10 @@
 #define ledG            25
 #define ledB            26
 
+//Definiciones del DC
+#define SUPPLY_VOLTAGE  3.3
+#define BITS_ADC_CONFI  4096
+
 
 //Definimos comandos ON Y OFF de los LEDs
 #define LEDR_ON         gpio_set_level(ledR,1);
@@ -241,8 +245,8 @@ void app_main(void)
     {
         /***********************************************PROGRAMACIÓN OBTENER TEMPERATURA DE LA NTC (ADC)******************************************************/
         raw = adc1_get_raw(ADC1_CHANNEL_0);
-        v_res = (raw * 3.3) / 4096;
-        res_ntc = (3.3 / v_res - 1)* res_2;
+        v_res = (raw * SUPPLY_VOLTAGE) / BITS_ADC_CONFI;
+        res_ntc = (SUPPLY_VOLTAGE / v_res - 1)* res_2;
 
         temp_index = encontrar_posicion_mas_cercana(valores_res_ntc, sizeof(valores_res_ntc) / sizeof(valores_res_ntc[0]), res_ntc);
         temp = valores_temp_ntc[temp_index];
